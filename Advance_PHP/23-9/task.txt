@@ -1,0 +1,4 @@
+create a parameterized constructor which will accept two numbers and one operation[+,-,*,/]
+according to selected value it should be perform actions.
+
+Note : Use switch case for selection
