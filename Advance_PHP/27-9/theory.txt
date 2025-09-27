@@ -1,0 +1,15 @@
+API : Application Programming interface
+
+Format : JSON,XML
+JSON -> javascript object notation
+
+[] -> jsonarray
+ 
+{} -> jsonobject
+
+
+[{}]
+
+{[]}
+
+{[{},{[]}]}
