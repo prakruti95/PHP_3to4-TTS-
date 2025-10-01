@@ -1,0 +1,14 @@
+db - tops
+table - students
+col:
+id
+name
+surname
+email
+gender
+password
+
+insert
+view
+update
+delete
