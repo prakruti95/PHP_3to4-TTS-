@@ -1,0 +1,36 @@
+1. import database
+
+2. create 2 folder class and web
+
+3. create one file with the name of index.php
+
+4. create DBController inside class
+
+5. add configuration in DbController file
+
+6. call connection using mysqli_connect in dbcontroller and call constructor
+
+7. create model class with the  name of Student.php
+
+8. add require_once and create class with the name of student
+
+9. call db controller in model class - student.php
+
+10. create add function in model class
+
+11. create insert function in dbcontroller
+
+12. create bindqueryparam in dbcontroller
+
+13. call insert function from dbcontroller to model(student)
+
+14. call controller and model in index.php file
+
+15. add css and images in web
+
+16. add student.php file
+
+17. add student-add.php file which have form
+
+18. add action in index.php file
+
