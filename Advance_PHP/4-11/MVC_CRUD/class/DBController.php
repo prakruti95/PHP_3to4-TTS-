@@ -50,6 +50,31 @@ class DBController {
         }
         return $resultset;
     }
+
+function update($query, $param_type, $param_value_array) 
+{
+        $sql = $this->conn->prepare($query);
+        $this->bindQueryParams($sql, $param_type, $param_value_array);
+        $sql->execute();
+}
+
+ function runQuery($query, $param_type, $param_value_array) 
+ {
+        $sql = $this->conn->prepare($query);
+        $this->bindQueryParams($sql, $param_type, $param_value_array);
+        $sql->execute();
+        $result = $sql->get_result();
+        
+        if ($result->num_rows > 0) {
+            while($row = $result->fetch_assoc()) {
+                $resultset[] = $row;
+            }
+        }
+        
+        if(!empty($resultset)) {
+            return $resultset;
+        }
+    }
   
 }
 ?>

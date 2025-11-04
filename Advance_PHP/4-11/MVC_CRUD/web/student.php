@@ -25,7 +25,18 @@
                     <td><?php echo $result[$k]["roll_number"]; ?></td>
                     <td><?php echo $result[$k]["dob"]; ?></td>
                     <td><?php echo $result[$k]["class"]; ?></td>
-                      <td><?php echo $result[$k]["class"]; ?></td>
+                    <td>
+
+                    <a class="btnEditAction"
+                        href="index.php?action=student-edit&id=<?php echo $result[$k]["id"]; ?>">
+                        <img src="web/image/icon-edit.png" />
+                        </a>
+                        <a class="btnDeleteAction" 
+                        href="index.php?action=student-delete&id=<?php echo $result[$k]["id"]; ?>">
+                        <img src="web/image/icon-delete.png" />
+                        </a>
+
+                    </td>
                    
                 </tr>
                     <?php
