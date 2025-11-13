@@ -5,8 +5,7 @@ $action = isset($_GET['action']) ? $_GET['action'] : 'index';
 $controllerName = ucfirst($controller) . 'Controller';
 $controllerFile = __DIR__ . '/../app/controllers/' . $controllerName . '.php';
 
-if (file_exists($controllerFile)) 
-    {
+if (file_exists($controllerFile)) {
     require $controllerFile;
     $controllerObj = new $controllerName();
 
