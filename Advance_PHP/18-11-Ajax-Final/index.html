@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inventory Management (AJAX + PHP)</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        table { border-collapse: collapse; width: 100%; }
+        th, td { padding: 10px; text-align: left; border: 1px solid #ccc; }
+        img { border-radius: 5px; }
+        input, button { padding: 5px; margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <h2>Inventory Management</h2>
+
+    <h3>Add / Update Product</h3>
+    <form id="productForm" enctype="multipart/form-data">
+        <input type="hidden" name="id" id="productId">
+        <input type="text" name="name" id="name" placeholder="Product Name" required><br>
+        <input type="number" name="price" id="price" placeholder="Price" required><br>
+        <input type="file" name="image" id="image"><br>
+        <button type="submit">Save Product</button>
+        <button type="button" id="cancelUpdate">Cancel</button>
+    </form>
+
+    <hr>
+
+    <h3>Product List</h3>
+    <input type="text" id="search" placeholder="Search by name..."><br><br>
+    <div id="productList"></div>
+
+    <script>
+    $(document).ready(function(){
+
+        // Load products
+        function loadProducts(query=''){
+            $.ajax({
+                url: "fetch_products.php",
+                type: "GET",
+                data: {search: query},
+                success: function(data){
+                    $("#productList").html(data);
+                }
+            });
+        }
+        loadProducts();
+
+        // Search products
+        $("#search").on("keyup", function(){
+            var search = $(this).val();
+            loadProducts(search);
+        });
+
+        // Cancel update
+        $("#cancelUpdate").on("click", function(){
+            $("#productForm")[0].reset();
+            $("#productId").val('');
+        });
+
+        // Add or Update Product
+        $("#productForm").on("submit", function(e){
+            e.preventDefault();
+            var formData = new FormData(this);
+
+            $.ajax({
+                url: "insert_product.php",
+                type: "POST",
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response){
+                    alert(response);
+                    $("#productForm")[0].reset();
+                    $("#productId").val('');
+                    loadProducts();
+                }
+            });
+        });
+
+        // Delete Product
+        $(document).on("click", ".deleteBtn", function(){
+            if(confirm("Are you sure to delete this product?")){
+                var id = $(this).data("id");
+                $.ajax({
+                    url: "delete_product.php",
+                    type: "POST",
+                    data: {id:id},
+                    success: function(response){
+                        alert(response);
+                        loadProducts();
+                    }
+                });
+            }
+        });
+
+        // Edit Product
+        $(document).on("click", ".editBtn", function(){
+            var id = $(this).data("id");
+            $.ajax({
+                url: "get_product.php",
+                type: "GET",
+                dataType: "json",
+                data: {id:id},
+                success: function(data){
+                    $("#productId").val(data.id);
+                    $("#name").val(data.name);
+                    $("#price").val(data.price);
+                }
+            });
+        });
+
+    });
+    </script>
+</body>
+</html>
