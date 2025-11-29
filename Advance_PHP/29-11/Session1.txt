@@ -1,0 +1,534 @@
+1. What is REST?
+
+REST (Representational State Transfer) is a style of building APIs.
+It uses simple HTTP rules to send and receive data.
+
+Main REST Principles
+
+1. Resources
+
+A resource is any data you want to work with.
+Example: `products`, `employees`, `orders`.
+
+2. HTTP Verbs(Methods)
+   These verbs tell the API what action to perform:
+
+   GET** → Read data
+   POST** → Create new data
+   PUT** → Update existing data
+   DELETE** → Delete data
+
+3. **Status Codes**
+   Status codes show if the request succeeded or failed:
+
+   * **200 OK** → request successful
+   * **201 Created** → new record created
+   * **400 Bad Request** → wrong input
+   * **404 Not Found** → record not found
+   * **500 Server Error** → server problem
+
+---
+
+## **2. JSON Structure**
+
+APIs normally return data in **JSON** because it is simple.
+
+Example JSON:
+
+```json
+{
+  "status": "success",
+  "data": {
+    "id": 1,
+    "name": "Laptop",
+    "price": 45000
+  }
+}
+```
+
+---
+
+## **3. Using Postman**
+
+Postman is a tool to **test APIs**.
+
+What you can do:
+
+* Send GET/POST/PUT/DELETE requests
+* Add JSON data in the Body
+* See response and status codes
+
+---
+
+## **4. Demo: PHP API – “Get All Products”**
+
+### **Example PHP code**
+
+```php
+<?php
+header("Content-Type: application/json");
+
+$products = [
+    ["id" => 1, "name" => "Laptop", "price" => 45000],
+    ["id" => 2, "name" => "Mouse", "price" => 500]
+];
+
+$response = [
+    "status" => "success",
+    "data" => $products
+];
+
+echo json_encode($response);
+?>
+
+
+Output in Postman
+
+
+{
+  "status": "success",
+  "data": [
+    { "id": 1, "name": "Laptop", "price": 45000 },
+    { "id": 2, "name": "Mouse", "price": 500 }
+  ]
+}
+
+
+
+Session 2 – Building PHP REST API (CRUD)
+
+Now we build a complete CRUD API for an Employee table.
+
+1. CRUD Meaning
+
+C – Create** → POST
+R – Read** → GET
+U – Update** → PUT
+D – Delete** → DELETE
+
+---
+
+2. Endpoints (Routes)
+
+| Action              | Method | URL                     | Description      |
+| ------------------- | ------ | ----------------------- | ---------------- |
+| Create employee     | POST   | `/employee/create`      | Add new employee |
+| Get all employees   | GET    | `/employee`             | Read all         |
+| Get single employee | GET    | `/employee/{id}`        | Read one         |
+| Update employee     | PUT    | `/employee/update/{id}` | Update           |
+| Delete employee     | DELETE | `/employee/delete/{id}` | Delete           |
+
+---
+
+3. Simple PHP CRUD Examples
+
+Create Employee (POST)
+
+
+<?php
+$data = json_decode(file_get_contents("php://input"), true);
+
+$name = $data['name'];
+$salary = $data['salary'];
+
+$response = [
+    "status" => "created",
+    "message" => "Employee added successfully"
+];
+
+echo json_encode($response);
+?>
+```
+
+### **Get All Employees (GET)**
+
+```php
+<?php
+header("Content-Type: application/json");
+
+$employees = [
+    ["id" => 1, "name" => "Amit", "salary" => 25000],
+    ["id" => 2, "name" => "Rita", "salary" => 30000]
+];
+
+echo json_encode([
+    "status" => "success",
+    "data" => $employees
+]);
+?>
+```
+
+### **Update Employee (PUT)**
+
+```php
+<?php
+$data = json_decode(file_get_contents("php://input"), true);
+
+$response = [
+    "status" => "updated",
+    "message" => "Employee updated successfully"
+];
+
+echo json_encode($response);
+?>
+```
+
+### **Delete Employee (DELETE)**
+
+```php
+<?php
+$response = [
+    "status" => "deleted",
+    "message" => "Employee removed"
+];
+
+echo json_encode($response);
+?>
+
+
+1. FULL PHP PROJECT FOLDER 
+
+
+employee_api/
+│
+├── config/
+│   └── database.php
+│
+├── employees/
+│   ├── create.php
+│   ├── read.php
+│   ├── read_single.php
+│   ├── update.php
+│   └── delete.php
+│
+└── .htaccess
+```
+
+---
+
+2. FILE CONTENTS
+
+A. config/database.php
+
+
+<?php
+class Database {
+    private $host = "localhost";
+    private $db_name = "employee_db";
+    private $username = "root";
+    private $password = "";
+    public $conn;
+
+    public function connect() {
+        $this->conn = null;
+
+        try {
+            $this->conn = new PDO("mysql:host=" . $this->host . ";dbname=" . $this->db_name,
+                                   $this->username, $this->password);
+            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        } catch(PDOException $e) {
+            echo "Connection Error: " . $e->getMessage();
+        }
+
+        return $this->conn;
+    }
+}
+?>
+
+
+B. employees/create.php (POST)
+
+
+<?php
+header("Content-Type: application/json");
+include_once("../config/database.php");
+
+$db = new Database();
+$conn = $db->connect();
+
+$data = json_decode(file_get_contents("php://input"));
+
+$query = "INSERT INTO employees (name, salary) VALUES (:name, :salary)";
+$stmt = $conn->prepare($query);
+
+$stmt->bindParam(":name", $data->name);
+$stmt->bindParam(":salary", $data->salary);
+
+if ($stmt->execute()) {
+    echo json_encode(["status" => "success", "message" => "Employee created"]);
+} else {
+    echo json_encode(["status" => "error", "message" => "Failed to create employee"]);
+}
+?>
+
+C. employees/read.php (GET all employees)
+
+<?php
+header("Content-Type: application/json");
+include_once("../config/database.php");
+
+$db = new Database();
+$conn = $db->connect();
+
+$query = "SELECT * FROM employees";
+$stmt = $conn->prepare($query);
+$stmt->execute();
+
+$employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+echo json_encode([
+    "status" => "success",
+    "data" => $employees
+]);
+?>
+
+D. employees/read_single.php (GET /employee/{id})
+
+
+<?php
+header("Content-Type: application/json");
+include_once("../config/database.php");
+
+$db = new Database();
+$conn = $db->connect();
+
+$id = $_GET['id'];
+
+$query = "SELECT * FROM employees WHERE id = :id LIMIT 1";
+$stmt = $conn->prepare($query);
+$stmt->bindParam(":id", $id);
+$stmt->execute();
+
+$employee = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if ($employee) {
+    echo json_encode(["status" => "success", "data" => $employee]);
+} else {
+    echo json_encode(["status" => "error", "message" => "Employee not found"]);
+}
+?>
+
+
+E. employees/update.php (PUT)**
+
+```php
+<?php
+header("Content-Type: application/json");
+include_once("../config/database.php");
+
+$db = new Database();
+$conn = $db->connect();
+
+$data = json_decode(file_get_contents("php://input"));
+
+$query = "UPDATE employees SET name = :name, salary = :salary WHERE id = :id";
+$stmt = $conn->prepare($query);
+
+$stmt->bindParam(":name", $data->name);
+$stmt->bindParam(":salary", $data->salary);
+$stmt->bindParam(":id", $data->id);
+
+if ($stmt->execute()) {
+    echo json_encode(["status" => "success", "message" => "Employee updated"]);
+} else {
+    echo json_encode(["status" => "error", "message" => "Failed to update"]);
+}
+?>
+```
+
+---
+
+## **F. employees/delete.php (DELETE)**
+
+```php
+<?php
+header("Content-Type: application/json");
+include_once("../config/database.php");
+
+$db = new Database();
+$conn = $db->connect();
+
+$data = json_decode(file_get_contents("php://input"));
+
+$query = "DELETE FROM employees WHERE id = :id";
+$stmt = $conn->prepare($query);
+
+$stmt->bindParam(":id", $data->id);
+
+if ($stmt->execute()) {
+    echo json_encode(["status" => "success", "message" => "Employee deleted"]);
+} else {
+    echo json_encode(["status" => "error", "message" => "Delete failed"]);
+}
+?>
+```
+
+---
+
+## **G. .htaccess** (Enables clean URLs)
+
+```apache
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ $1 [L,QSA]
+```
+
+---
+
+3. SQL FILE FOR DATABASE**
+
+Create a file named: **employee_db.sql**
+
+```sql
+CREATE DATABASE IF NOT EXISTS employee_db;
+USE employee_db;
+
+CREATE TABLE employees (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    salary INT
+);
+```
+
+---
+
+# ✅ **4. POSTMAN COLLECTION (Importable JSON)**
+
+Create a file named **Employee_API.postman_collection.json**
+
+
+```json
+{
+  "info": {
+    "name": "Employee CRUD API",
+    "_postman_id": "12345",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Employee",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":\"Amit\",\"salary\":30000}"
+        },
+        "url": {
+          "raw": "http://localhost/employee_api/employees/create.php",
+          "host": ["http://localhost"],
+          "path": ["employee_api", "employees", "create.php"]
+        }
+      }
+    },
+    {
+      "name": "Read All Employees",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost/employee_api/employees/read.php"
+      }
+    },
+    {
+      "name": "Read Single Employee",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost/employee_api/employees/read_single.php?id=1"
+      }
+    },
+    {
+      "name": "Update Employee",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"id\":1,\"name\":\"Rita\",\"salary\":35000}"
+        },
+        "url": "http://localhost/employee_api/employees/update.php"
+      }
+    },
+    {
+      "name": "Delete Employee",
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"id\":1}"
+        },
+        "url": "http://localhost/employee_api/employees/delete.php"
+      }
+    }
+  ]
+}
+
+
+# ✅ **Difference Between API and REST API**
+
+## **1. What is an API?**
+
+API = **Application Programming Interface**
+
+* An API allows two software systems to communicate.
+* API is a **broad term**.
+* There are many types of APIs, for example:
+
+  * Web API
+  * REST API
+  * SOAP API
+  * GraphQL API
+  * SDKs
+  * Library functions
+
+👉 **API is the general concept.**
+
+### **Simple Example:**
+
+When your mobile app needs weather information, it calls a **Weather API**.
+
+---
+
+# ✅ **What is a REST API?**
+
+REST API is **a specific type of Web API** that follows **REST principles**.
+
+REST = **Representational State Transfer**
+
+A REST API must follow rules like:
+
+* Uses HTTP methods (GET, POST, PUT, DELETE)
+* Uses URLs as resources (example: `/employees/1`)
+* Returns data mostly in JSON
+* Stateless (server does not remember previous request)
+* Uses standard status codes (200, 404, 500)
+
+👉 **REST API is a type of API that follows REST rules.**
+
+---
+
+# 🔍 **Simple Analogy**
+
+* **API** = “Vehicle”
+* **REST API** = “Car”
+
+All cars are vehicles,
+but not all vehicles are cars.
+
+All REST APIs are APIs,
+but not all APIs are REST APIs.
+
+---
+
+# 📌 **Key Differences Table**
+
+| Feature     | API                                 | REST API                         |
+| ----------- | ----------------------------------- | -------------------------------- |
+| Meaning     | General interface for communication | API that follows REST principles |
+| Data format | Any (XML, JSON, text)               | Mostly JSON                      |
+| Protocol    | Many (HTTP, HTTPS, TCP, etc.)       | Only HTTP/HTTPS                  |
+| Methods     | Not fixed                           | Uses GET, POST, PUT, DELETE      |
+| Rules       | No strict rules                     | Must follow REST rules           |
+| Usage       | Libraries, OS, software             | Web-based data services          |
+
+

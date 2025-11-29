@@ -1,0 +1,227 @@
+1.
+CREATE DATABASE company_db;
+
+USE company_db;
+
+CREATE TABLE employees (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100),
+    position VARCHAR(100),
+    salary DECIMAL(10,2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+2.
+rest-api-php/
+│── config.php
+│── api.php
+└── .htaccess   (optional for clean URLs)
+
+3.
+config.php:
+<?php
+$host = "localhost";
+$user = "root";
+$pass = "";
+$db   = "company_db";
+
+$conn = new mysqli($host, $user, $pass, $db);
+
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+?>
+
+
+4.
+api.php:
+<?php
+header("Content-Type: application/json");
+include "config.php";
+
+// Fetch request method
+$method = $_SERVER['REQUEST_METHOD'];
+
+// Read raw input (for POST/PUT)
+$data = json_decode(file_get_contents("php://input"), true);
+
+switch ($method) {
+
+    // ---------------------------------------
+    // READ (GET)
+    // ---------------------------------------
+    case "GET":
+        if (isset($_GET['id'])) {
+            $id = $_GET['id'];
+            $sql = "SELECT * FROM employees WHERE id = $id";
+            $result = $conn->query($sql);
+            echo json_encode($result->fetch_assoc());
+        } else {
+            $sql = "SELECT * FROM employees";
+            $result = $conn->query($sql);
+            $rows = [];
+            while ($row = $result->fetch_assoc()) {
+                $rows[] = $row;
+            }
+            echo json_encode($rows);
+        }
+        break;
+
+    // ---------------------------------------
+    // CREATE (POST)
+    // ---------------------------------------
+    case "POST":
+        $name     = $data["name"];
+        $email    = $data["email"];
+        $position = $data["position"];
+        $salary   = $data["salary"];
+
+        $sql = "INSERT INTO employees (name, email, position, salary)
+                VALUES ('$name', '$email', '$position', '$salary')";
+
+        if ($conn->query($sql)) {
+            echo json_encode(["message" => "Employee created successfully"]);
+        } else {
+            echo json_encode(["error" => $conn->error]);
+        }
+        break;
+
+    // ---------------------------------------
+    // UPDATE (PUT)
+    // ---------------------------------------
+    case "PUT":
+        if (!isset($_GET['id'])) {
+            echo json_encode(["error" => "Employee ID required"]);
+            exit;
+        }
+
+        $id = $_GET['id'];
+
+        $name     = $data["name"];
+        $email    = $data["email"];
+        $position = $data["position"];
+        $salary   = $data["salary"];
+
+        $sql = "UPDATE employees SET
+                name='$name',
+                email='$email',
+                position='$position',
+                salary='$salary'
+                WHERE id=$id";
+
+        if ($conn->query($sql)) {
+            echo json_encode(["message" => "Employee updated"]);
+        } else {
+            echo json_encode(["error" => $conn->error]);
+        }
+        break;
+
+    // ---------------------------------------
+    // DELETE (DELETE)
+    // ---------------------------------------
+    case "DELETE":
+        if (!isset($_GET['id'])) {
+            echo json_encode(["error" => "Employee ID required"]);
+            exit;
+        }
+
+        $id = $_GET['id'];
+
+        $sql = "DELETE FROM employees WHERE id=$id";
+
+        if ($conn->query($sql)) {
+            echo json_encode(["message" => "Employee deleted"]);
+        } else {
+            echo json_encode(["error" => $conn->error]);
+        }
+        break;
+
+    default:
+        echo json_encode(["message" => "Invalid Request"]);
+        break;
+}
+?>
+5..htaccess:
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ api.php?$1 [QSA,L]
+
+
+
+GET: GET http://localhost/rest-api-php/api.php?id=3
+POST:
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "position": "Manager",
+  "salary": "50000"
+}
+
+Update:
+PUT http://localhost/rest-api-php/api.php?id=3
+
+{
+  "name": "John Updated",
+  "email": "john@newmail.com",
+  "position": "Director",
+  "salary": "75000"
+}
+
+
+Delete:
+DELETE http://localhost/rest-api-php/api.php?id=3
+
+
+
+if remove extension 
+RewriteEngine On
+
+# Remove .php extension from URL
+RewriteCond %{REQUEST_FILENAME}\.php -f
+RewriteRule ^(.*)$ $1.php [L]
+
+
+
+http://localhost/api.php
+http://localhost/api
+
+
+
+
+# Block direct access to .php files
+<FilesMatch "\.php$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
+
+# Allow only index/api file
+<Files "api.php">
+    Allow from all
+</Files>
+
+---------------------
+
+/employees
+/employees/5
+RewriteEngine On
+
+# Clean URL - allow calling PHP without .php extension
+RewriteCond %{REQUEST_FILENAME}\.php -f
+RewriteRule ^(.*)$ $1.php [L]
+
+# API route
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ api.php?$1 [QSA,L]
+---------------------------
+
+
+GET /employees
+GET /employees?id=3
+POST /employees
+PUT /employees?id=3
+DELETE /employees?id=3
+
+
