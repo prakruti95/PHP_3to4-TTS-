@@ -1,0 +1,7 @@
+Create a simple Product Management System using PHP with MVC architecture and AJAX. 
+build features to add, view, search, update, and delete products without reloading the page. 
+Use a MySQL table with fields like id, product_name, price,product_image and quantity. 
+All operations—such as submitting the add form, loading the product list, searching by name, editing product details, 
+and deleting a product—should be done using AJAX calls that interact with the controller and model. 
+
+USE MVC architecture to complete this 
