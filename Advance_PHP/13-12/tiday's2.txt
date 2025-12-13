@@ -1,0 +1,191 @@
+
+# 🔥 Razorpay Payment Integration Demo (PHP)
+
+## STEP 1️⃣ Razorpay Account & Keys
+
+1. Go to **Razorpay Dashboard**
+2. Settings → API Keys
+3. Generate **Test Key**
+4. find this:
+
+```
+Key ID     : rzp_test_xxxxxxxx
+Key Secret: xxxxxxxxxxxxxxxx
+```
+
+---
+
+## STEP 2️⃣ Project Folder Structure
+
+```
+payment-demo/
+ ├── config.php
+ ├── index.php
+ ├── pay.php
+ ├── success.php
+ └── razorpay-php/   (SDK)
+```
+
+---
+
+## STEP 3️⃣ Razorpay PHP SDK Download
+
+Download from GitHub
+👉 [https://github.com/razorpay/razorpay-php](https://github.com/razorpay/razorpay-php)
+
+Extract folder as:
+
+```
+razorpay-php/
+```
+
+---
+
+## STEP 4️⃣ config.php (API Keys)
+
+```php
+<?php
+require 'razorpay-php/Razorpay.php';
+
+use Razorpay\Api\Api;
+
+$keyId = "rzp_test_xxxxxxxx";
+$keySecret = "xxxxxxxxxxxxxxxx";
+
+$api = new Api($keyId, $keySecret);
+```
+
+---
+
+## STEP 5️⃣ index.php (Payment Form)
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Demo</title>
+</head>
+<body>
+
+<h2>Razorpay Payment Demo</h2>
+
+<form action="pay.php" method="POST">
+    <label>Name:</label>
+    <input type="text" name="name" required><br><br>
+
+    <label>Email:</label>
+    <input type="email" name="email" required><br><br>
+
+    <label>Amount (INR):</label>
+    <input type="number" name="amount" required><br><br>
+
+    <button type="submit">Pay Now</button>
+</form>
+
+</body>
+</html>
+```
+
+---
+
+## STEP 6️⃣ pay.php (Create Order)
+
+```php
+<?php
+require 'config.php';
+
+$name   = $_POST['name'];
+$email  = $_POST['email'];
+$amount = $_POST['amount'] * 100; // INR to paise
+
+$order = $api->order->create([
+    'receipt'         => rand(1000,9999),
+    'amount'          => $amount,
+    'currency'        => 'INR',
+    'payment_capture' => 1
+]);
+
+$orderId = $order['id'];
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pay</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+
+<script>
+var options = {
+    "key": "rzp_test_xxxxxxxx",
+    "amount": "<?php echo $amount; ?>",
+    "currency": "INR",
+    "name": "Demo Company",
+    "description": "Test Transaction",
+    "order_id": "<?php echo $orderId; ?>",
+    "handler": function (response){
+        window.location.href = "success.php?payment_id=" + response.razorpay_payment_id;
+    },
+    "prefill": {
+        "name": "<?php echo $name; ?>",
+        "email": "<?php echo $email; ?>"
+    },
+    "theme": {
+        "color": "#3399cc"
+    }
+};
+var rzp = new Razorpay(options);
+rzp.open();
+</script>
+
+</body>
+</html>
+```
+
+---
+
+## STEP 7️⃣ success.php (Payment Success Page)
+
+```php
+<?php
+$paymentId = $_GET['payment_id'];
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Success</title>
+</head>
+<body>
+
+<h2>✅ Payment Successful</h2>
+<p>Payment ID: <b><?php echo $paymentId; ?></b></p>
+
+</body>
+</html>
+```
+
+---
+
+## STEP 8️⃣ Test Card Details (IMPORTANT)
+
+Use Razorpay **TEST CARD**:
+
+```
+Card No: 4111 1111 1111 1111
+Expiry: Any future date
+CVV: 123
+OTP: 123456
+```
+
+---
+
+## ✅ Flow Summary
+
+```
+index.php → pay.php → Razorpay Popup → success.php
+```
+
+---
+
