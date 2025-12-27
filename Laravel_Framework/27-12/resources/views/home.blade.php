@@ -1,0 +1,1 @@
+<a href="{{ route('students.list') }}">View Students</a>
